@@ -1,0 +1,136 @@
+ppendix C/Regular Expression Reference
+The Regular Expression elements below are a subset of TR1 Regular Expressions, used by the Search tool to match regular expressions to file/folder names.  Some elements of the regular expression parser are not functional in that context (e.g. elements for detecting words boundaries, line ends, etc., elements for text replacement) and are for that reason, not included.  Also, a few functional elements have no useful value here and have been omitted from the reference.  The user of regular expressions is encouraged to experiment and discover any additional functionality embedded with the Search tool.
+
+Some of the examples may not be ideally constructed - they are there just to demonstrate individual elements.  Keep in mind that there is often more than one way to construct a regular expression which does a certain task.
+
+ 
+
+Meta-characters
+Meta-characters generally consist of the following characters: ˆ $ . * \ [ ] { } ( ) + ? |
+Some meta-characters have more than one meaning, depending on their context (e.g. ^ as a negation symbol when used inside [], or as an anchor when used outside []).  Using the escape character (\) immediately before a meta-character matches the character itself as a literal (no special meaning), for example \^ matches the actual "^" symbol when it occurs in the target (i.e. file/folder name) string.
+
+ 
+
+Elements
+The following table contains meta-characters and elements useful in the Search tool as part of regular expressions; there may also be additional useful information in the Regular Expressions Primer.  Note that the case (i.e. upper/lower case) is important in some expressions (e.g. \s, \S).
+
+EXPRESSION	SYNTAX	ORDINARY NAME	DESCRIPTION	EXAMPLES
+Any character	.	dot or period	matches any single character (except a newline - not used in file/folder names)	s.s matches sys (system) and ses (session)
+but not sores
+Zero or more
+(quantifier)	*	asterisk	matches zero or more occurrences of the preceding expression, and makes all possible matches	a*b matches b (bat) and ab (about)
+.* matches any sequence of characters
+Zero or one
+(quantifier)	?	question mark	matches zero or one occurrence of the preceding expression,  same as {0,1} (see Repetition below)	 
+One or more
+(quantifier)	+	plus	matches at least one occurrence of the preceding expression, same as {1,} (see Repetition below)	rol+ matches rol and rolllll
+but not ro
+Repetition
+(quantifier)	{n}
+{min,max}	braces	In the first form, {n} matches n or more occurrences (n is inside the braces) of the preceding expression.  In the second form, {min,max} matches at least min occurrences of the preceding expression, but not more than max occurrences.  If max is omitted (e.g. {min,}) then the expression can match min or more occurrences (no upper limit).	rol{2} matches roll and rolllll but not rol
+z{2,3} matches zz and zzz but not zzzz
+z{2,} matches zz and zzz, zzzz, etc.
+Any one character in the set	[]	(square) brackets	matches any one of the characters in the []. To specify a range of characters, list the starting and ending characters separated by a dash (-), as in [a-z].  Also see Character Classes below.	be[srn]t matches best, bert or bent
+Any one character not in the set	[^...]	circumflex accent,
+exponent symbol	matches any character that is not in the set of characters that follows the ^.  Not that this symbol (^) has alternate meaning when used outside the square brackets.	be[^r]t matches best or bent
+but not bert
+Or	|	pipe, vertical line	matches either the expression before or the one after the OR symbol (|). Mostly used in a group.	AL|TE matches ALE or ATE
+Group	()	parentheses	isolates an Or expression, also used by capture techniques	a(jpg|jpeg) matches ajpg or ajpeg
+Escape	\	backslash	when it precedes a meta-character, the combination is taken as a literal.  Some meta-characters, namely ˆ$.[]{}()+, may be used in file/folder names.  To match the actual "\" character, escape it as you would any other character (e.g. \\).  This symbol, however, is forbidden for use in a Windows file or folder name (used in path construction).	a\.txt matches a.txt
+Any one whitespace character	\s	backslash s	matches a single whitespace character (space, tab, newline).  Note: tab and newline cannot used in file/folder names.  s is actually a class ([:space:] or [:s:]), but is not listed under classes; use this syntax instead.	hi\sbob matches hi bob
+but not hi-bob
+Any one non-whitespace character	\S	backslash S	matches a single non-whitespace character.	hi\Sbob matches hi-bob
+but not hi bob
+Any one digit	\d	backslash d	matches a single numeric character.  This is the same as using [0-9].  See classes below.	file\d matches file2 and file9
+but not files
+Any one non-digit	\D	backslash D	matches a single non-numeric character.  This is the same as using [^0-9].	file\D matches files and filed
+but not file1
+Any alphanumeric
+(word character)	\w	backslash w	matches a single alphanumeric character (a-z, A-Z, 0-9).  See classes below.	1234\w matches 12345 and 1234a
+but not 1234!
+Any non-alphanumeric
+(non-word character)	\W	backslash W	matches a single non-alphanumeric character	1234\W matches 1234!
+but not 12345 or 1234a
+One Unicode character	\u####	backslash u, 4 hex digits	matches a single Unicode character.  #### represents 4 hexadecimal digits - the character code; hex digits in the A-F range may be upper or lower case.	flamb\u00E9 matches flambé
+but not flambe
+ 
+
+Anchors
+Anchors are elements which match specific locations in the target string.  Knowing that the search pattern has arrived at one of these locations might be useful in narrowing down the search by incorporating that location into the regular expression.  Anchors have zero width, that is, they do not advance the text pointer in the target string.
+
+EXPRESSION	SYNTAX	ORDINARY NAME	DESCRIPTION	EXAMPLES
+Word boundary	\b	backslash b	
+matches when the current position in the target string is immediately after a word boundary.  In other words, at this point, there is a word (alphanumeric) character on one side of the pointer, but not on the other.  This might be
+
+at the start of the file name
+at a space in the file name
+at a "." character anywhere in the name, or at the start of the file extension
+The "\b" element matches either a start or end of a word.
+
+.*\bhp.* matches "abc hp.txt", "hp abc.txt", "hp.txt" and "hpabc.txt"
+but not "abchp.txt"
+Non-word boundary	\B	backslash \B	matches when the current position in the target string is not a word boundary (see \b above)	.*\Bhp.* matches "abchp.txt"
+but not all the others matched in \b above
+String start	^	circumflex accent,
+exponent symbol	matches when the current position is the start of the string	.*^ex.* matches explorer.htm
+but not index.htm
+String end	$	dollar sign	matches when the current position is the end of the string	.*hp$.* matches abchp and hp
+but not hpabc
+ 
+
+Character Classes
+Character classes are a shorthand way of representing a range of characters and may be used directly in the construction of character sets (or negation sets, e.g. [^...]) in regular expressions.  Each class below is shown in usable form - they require delimiting ":" characters, and must be enclosed in brackets. They may then be used in character sets - as if they were a single character - which requires double sets of brackets (see examples below).  Using classes may reduce the size of your expression, but the same functionality can be added in other ways.  Note: that classes are locale dependent and may include foreign language characters which are in common locale usage, e.g. é; to exclude those characters, use a constructed character set instead, such as [a-zA-Z].  A few select classes have short names, e.g. see digits and alphanumeric below, and \s in expressions above.
+
+CLASS	SYNTAX	DESCRIPTION	EXAMPLES
+uppercase	[:upper:]	upper case characters	[[:upper:]]* matches FILE
+but not File
+lowercase	[:lower:]	lower case characters	[[:lower:]]* matches file
+but not File
+alphabetic	[:alpha:]	all upper/lower case letters	[[:alpha:]]* matches abgh
+but not doc1
+digits	[:digit:]
+[:d:]	ordinary digits 0-9, alternate syntax is [:d:]	[[:digit:]]* matches 134679
+but not 134679a
+hexadecimal digits	[:xdigit:]	all hex digits, i.e. a-f, A-F, 0-9	[[:xdigit:]]* matches 1a2b9F
+but not 1g4b
+alphanumeric	[:alnum:]
+[:w:]	all upper/lower case letters, digits 0-9, alternate syntax is [:w:]	[[:alnum:]]* matches 12ex and flambé
+but not 87_a or 12ex.txt
+punctuation	[:punct:]	punctuation	[[:punct:]]* matches _!~.@@
+but not _!~.@@.txt
+ 	[:graph:]	upper/lower case letters, digits, and punctuation	[[:graph:]]* matches textdoc.txt
+but not text doc.txt
+ 	[:print:]	upper/lower case letters, digits, punctuation and space	same as . - matches every character
+ 
+
+Capture Groups
+If an element matches a portion of the target string, the characters that it matched (in the target string) may be captured and re-used in the same regular expression.  Capture is accomplished by
+
+forming the capturing element inside parentheses, e.g. (.) captures a single character then
+using escape (\) followed by an integer to represent the captured text.  Integers start at 1 (left-most or first capture) and increase as captures are done (left to right).
+For example, the regular expression
+    ab(.{2})(.{2})(.{2})\1\2\3
+may be broken down as follows:
+
+ab	literal	matches "ab" as the first 2 characters in the target string
+(.{2})	wildcard x 2	matches and captures the next 2 characters, i.e. 3-4
+(.{2})	wildcard x 2	matches and captures the next 2 characters, i.e. 5-6
+(.{2})	wildcard x 2	matches and captures the next 2 characters, i.e. 7-8
+\1	capture group 1	represents characters 3-4 in the target string, and tries to match them starting at character 9 (i.e. 9-10)
+\2	capture group 2	represents characters 5-6 in the target string, and tries to match them starting at character 11 (i.e. 11-12)
+\3	capture group 3	represents characters 7-8 in the target string, and tries to match them starting at character 11 (i.e. 11-12)
+This expression matches the file named ab12ed4f12ed4f, but not the file named ab12ed4f12ed4g (the 2 character repeating patterns are not satisfied at the last character).
+
+ 
+
+Concatenation
+Regular expression elements, with or without repetition counts, can be concatenated to form longer regular expressions, simply by writing the individual elements concurrently.  The resulting expression is a result of applying the individual elements, in sequence left to right, in order to determine a match.
+
+Example: the expression    a+(b|c){2,}\.doc    is a result of concatenating
+
+ 	●	a+	match one or more "a"s, then
+ 	●	(b|c){2,}	match "b" or "c", 2 or more times, then
+ 	●	\.	match the "." (dot) character (part of the file extension), then
+ 	●	doc	match "doc"
+This expression would match file names of acc.doc and abbb.doc, but would not match acc.txt or ac.doc.
+
